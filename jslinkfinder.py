@@ -50,6 +50,8 @@ class BurpExtender(IBurpExtender, IScannerCheck, ITab):
         self.initUI()
         self.callbacks.addSuiteTab(self)
         
+        self.blacklist_ext = ["jpg","png","jpeg","gif","css","svg","pdf","woff","woff2","ttf","eot"]
+        
         print ("Burp JS LinkFinder V2 loaded.")
         print ("Copyright (c) 2019 Frans Hendrik Botes")
         print ("Copyright (c) 2021 V2 (Current) Enes Saltik")
@@ -71,7 +73,7 @@ class BurpExtender(IBurpExtender, IScannerCheck, ITab):
         self.scrollPane.getViewport().setView((self.outputList))
 
         self.clearBtn = swing.JButton("Clear Log", actionPerformed=self.clearLog)
-        self.parentFrm = swing.JFileChooser()
+        self.exportBtn = swing.JButton("Save Endpoints", actionPerformed=self.saveBtn)
 
         self.onlyScopeCheckbox = swing.JCheckBox("Only Scope",actionPerformed=self.checkBoxScope)
 
@@ -88,6 +90,7 @@ class BurpExtender(IBurpExtender, IScannerCheck, ITab):
                     .addComponent(self.outputLabel)
                     .addComponent(self.scrollPane)
                     .addComponent(self.clearBtn)
+                    .addComponent(self.exportBtn)
                     .addComponent(self.onlyScopeCheckbox)
                 )
             )
@@ -100,6 +103,7 @@ class BurpExtender(IBurpExtender, IScannerCheck, ITab):
                     .addComponent(self.outputLabel)
                     .addComponent(self.scrollPane)
                     .addComponent(self.clearBtn)
+                    .addComponent(self.exportBtn)
                     .addComponent(self.onlyScopeCheckbox)
                 )
             )
@@ -121,6 +125,23 @@ class BurpExtender(IBurpExtender, IScannerCheck, ITab):
     def clearLog(self, event):
         self.dataModel.setRowCount(0)
     
+    def saveBtn(self,e):
+        chooseFile = JFileChooser()
+        chooseFile.setDialogTitle('Select Export Location')
+        chooseFile.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY)
+
+        txt=""
+        for i in range(self.outputList.getModel().getRowCount()):
+            txt+=str(self.outputList.getModel().getValueAt(i,0))+"\t"+self.outputList.getModel().getValueAt(i,1)+"\t"+self.outputList.getModel().getValueAt(i,2)+"\n"
+        ret = chooseFile.showSaveDialog(self.tab)
+        if ret == JFileChooser.APPROVE_OPTION:
+            if chooseFile.getSelectedFile().isDirectory():
+                file_name = str(chooseFile.getSelectedFile())
+                f=open(file_name+"/export.txt","w")
+                f.write(txt)
+                f.close()
+            
+
     def doPassiveScan(self, ihrr):
         
         try:
@@ -137,6 +158,9 @@ class BurpExtender(IBurpExtender, IScannerCheck, ITab):
                         return
                     issueText = linkA.analyseURL()
                     for counter, issueText in enumerate(issueText):
+                            if "." in issueText['link']:
+                                if issueText['link'].split("?")[0].split(".")[-1] in self.blacklist_ext:
+                                    continue
                             self.outputList.getModel().addRow([self.outputList.getModel().getRowCount(),str(urlReq),issueText['link']])
                     issues = ArrayList()
                     issues.add(SRI(ihrr, self.helpers))
