@@ -52,7 +52,7 @@ class BurpExtender(IBurpExtender, IScannerCheck, ITab):
         
         self.blacklist_ext = ["jpg","png","jpeg","gif","css","svg","pdf","woff","woff2","ttf","eot"]
         
-        print ("Burp JS LinkFinder V2.1 loaded.")
+        print ("Burp JS LinkFinder V2 loaded.")
         print ("Copyright (c) 2019 Frans Hendrik Botes")
         print ("Copyright (c) 2022 V2.1 (Current) Enes Saltik")
         
@@ -161,8 +161,7 @@ class BurpExtender(IBurpExtender, IScannerCheck, ITab):
             # check if JS file
             if ".js" in str(urlReq):
                 # Exclude casual JS files
-                print("AAA",testString.split("/")[-1])
-                if any(x in testString for x in JSExclusionList):
+                if any(x in testString.split("/")[-1] for x in JSExclusionList):
                     print("\n" + "[-] URL excluded " + str(urlReq))
                 else:
                     if self.onlyScope and not self.callbacks.isInScope(urlReq):
