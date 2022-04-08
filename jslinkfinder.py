@@ -2,7 +2,7 @@
 #  BurpLinkFinder - Find links within JS files.
 #
 #  Copyright (c) 2019 Frans Hendrik Botes,
-#  Copyright (c) 2021 v2 Enes Saltik,
+#  Copyright (c) 2022 v2.1 Enes Saltik,
 #  Credit to https://github.com/GerbenJavado/LinkFinder for the idea and regex
 #
 from burp import IBurpExtender, IScannerCheck, IScanIssue, ITab
@@ -52,9 +52,9 @@ class BurpExtender(IBurpExtender, IScannerCheck, ITab):
         
         self.blacklist_ext = ["jpg","png","jpeg","gif","css","svg","pdf","woff","woff2","ttf","eot"]
         
-        print ("Burp JS LinkFinder V2 loaded.")
+        print ("Burp JS LinkFinder V2.1 loaded.")
         print ("Copyright (c) 2019 Frans Hendrik Botes")
-        print ("Copyright (c) 2021 V2 (Current) Enes Saltik")
+        print ("Copyright (c) 2022 V2.1 (Current) Enes Saltik")
         
     def initUI(self):
         self.tab = swing.JPanel()
@@ -73,6 +73,7 @@ class BurpExtender(IBurpExtender, IScannerCheck, ITab):
         self.scrollPane.getViewport().setView((self.outputList))
 
         self.clearBtn = swing.JButton("Clear Log", actionPerformed=self.clearLog)
+        self.DeleteSelectedBtn = swing.JButton("Delete Selected Items", actionPerformed=self.deleteSelected)
         self.exportBtn = swing.JButton("Save Endpoints", actionPerformed=self.saveBtn)
 
         self.onlyScopeCheckbox = swing.JCheckBox("Only Scope",actionPerformed=self.checkBoxScope)
@@ -90,6 +91,7 @@ class BurpExtender(IBurpExtender, IScannerCheck, ITab):
                     .addComponent(self.outputLabel)
                     .addComponent(self.scrollPane)
                     .addComponent(self.clearBtn)
+                    .addComponent(self.DeleteSelectedBtn)
                     .addComponent(self.exportBtn)
                     .addComponent(self.onlyScopeCheckbox)
                 )
@@ -103,6 +105,7 @@ class BurpExtender(IBurpExtender, IScannerCheck, ITab):
                     .addComponent(self.outputLabel)
                     .addComponent(self.scrollPane)
                     .addComponent(self.clearBtn)
+                    .addComponent(self.DeleteSelectedBtn)
                     .addComponent(self.exportBtn)
                     .addComponent(self.onlyScopeCheckbox)
                 )
@@ -125,6 +128,13 @@ class BurpExtender(IBurpExtender, IScannerCheck, ITab):
     def clearLog(self, event):
         self.dataModel.setRowCount(0)
     
+    def deleteSelected(self, event):
+        selected = self.outputList.getSelectedRows()
+        Idel=0
+        for i in selected:
+            self.outputList.getModel().removeRow(i-Idel)
+            Idel+=1
+
     def saveBtn(self,e):
         chooseFile = JFileChooser()
         chooseFile.setDialogTitle('Select Export Location')
@@ -132,7 +142,7 @@ class BurpExtender(IBurpExtender, IScannerCheck, ITab):
 
         txt=""
         for i in range(self.outputList.getModel().getRowCount()):
-            txt+=str(self.outputList.getModel().getValueAt(i,0))+"\t"+self.outputList.getModel().getValueAt(i,1)+"\t"+self.outputList.getModel().getValueAt(i,2)+"\n"
+            txt+=str(self.outputList.getModel().getValueAt(i,0))+"\t"+self.outputList.getModel().getValueAt(i,1)+"\n"
         ret = chooseFile.showSaveDialog(self.tab)
         if ret == JFileChooser.APPROVE_OPTION:
             if chooseFile.getSelectedFile().isDirectory():
@@ -151,6 +161,7 @@ class BurpExtender(IBurpExtender, IScannerCheck, ITab):
             # check if JS file
             if ".js" in str(urlReq):
                 # Exclude casual JS files
+                print("AAA",testString.split("/")[-1])
                 if any(x in testString for x in JSExclusionList):
                     print("\n" + "[-] URL excluded " + str(urlReq))
                 else:
