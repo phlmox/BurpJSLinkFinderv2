@@ -1,7 +1,7 @@
 # jslinkfinderv2
 Burp Extension for a passive scanning JS files for endpoint links.
 
-![alt text](https://raw.githubusercontent.com/phlmox/jslinkfinderv2/main/scr.PNG)
+![alt text](https://raw.githubusercontent.com/phlmox/jslinkfinderv2/main/scr.JPG)
 
 
 # Installation:
