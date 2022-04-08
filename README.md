@@ -4,14 +4,14 @@ Burp Extension for a passive scanning JS files for endpoint links.
 ![alt text](https://raw.githubusercontent.com/phlmox/jslinkfinderv2/main/scr.PNG)
 
 
-#Installation:
+# Installation:
  
 1) Burp Suite Extender Tab -> Add
 2) Extension Type -> Python and click 'Select File' button and select jslinkfinder.py and click 'Next'.
 3) Done!
 
 
-#Changelog:
+# Changelog:
 
 V2.1
 -----------
