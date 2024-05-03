@@ -118,9 +118,8 @@ class BurpExtender(IBurpExtender, IScannerCheck, ITab,IContextMenuFactory, IHttp
 
     def createMenuItems(self, invocation):
             items = []
-            if invocation.getInvocationContext() == invocation.CONTEXT_MESSAGE_VIEWER_RESPONSE:
-                item = JMenuItem("Scan this response", actionPerformed=lambda _: self.linkfinderWorker(invocation))
-                items.append(item)
+            item = JMenuItem("Run Scan", actionPerformed=lambda _: self.linkfinderWorker(invocation))
+            items.append(item)
             return items
 
     def saveBtn(self,e):
@@ -146,13 +145,12 @@ class BurpExtender(IBurpExtender, IScannerCheck, ITab,IContextMenuFactory, IHttp
             try:
                 urlReq = ihrr.getUrl()
                 testString = str(urlReq)
+                print("Scanning "+testString)
                 linkA = linkAnalyse(ihrr,self.helpers)
-
-                print(linkA)
 
                 # Exclude casual JS files
                 if any(x in testString.split("/")[-1] for x in JSExclusionList):
-                    print("\n" + "[-] URL excluded " + str(urlReq))
+                    print("[-] URL excluded " + str(urlReq))
                 else:
                     issueText = linkA.analyseURL()
                     for counter, issueText in enumerate(issueText):
@@ -160,9 +158,9 @@ class BurpExtender(IBurpExtender, IScannerCheck, ITab,IContextMenuFactory, IHttp
                                 if issueText['link'].split("?")[0].split(".")[-1] in self.blacklist_ext:
                                     continue
                             self.outputList.getModel().addRow([self.outputList.getModel().getRowCount(),str(urlReq),issueText['link']])
-                    return issues
             except UnicodeEncodeError:
                 print ("Error in URL decode.")
+        print("Scan ended.")
         return None
 
 
@@ -224,7 +222,6 @@ class linkAnalyse():
     def	parser_file(self, content, regex_str, mode=1, more_regex=None, no_dup=1):
         regex = re.compile(regex_str, re.VERBOSE)
         items = [{"link": m.group(1)} for m in re.finditer(regex, content)]
-        print(items)
         if no_dup:
             # Remove duplication
             all_links = set()
