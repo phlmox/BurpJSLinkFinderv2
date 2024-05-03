@@ -252,9 +252,12 @@ class linkAnalyse():
 
     def analyseURL(self):
         endpoints = ""
-        encoded_resp=binascii.b2a_base64(self.reqres.getResponse())
-        decoded_resp=base64.b64decode(encoded_resp)
-        endpoints=self.parser_file(decoded_resp, self.regex_str)
+        try:
+            encoded_resp=binascii.b2a_base64(self.reqres.getResponse())
+            decoded_resp=base64.b64decode(encoded_resp)
+            endpoints=self.parser_file(decoded_resp, self.regex_str)
+        except:
+            pass
         return endpoints
         
         
