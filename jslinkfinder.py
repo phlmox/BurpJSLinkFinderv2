@@ -2,7 +2,7 @@
 #  BurpLinkFinder - Find links within JS files.
 #
 #  Copyright (c) 2019 Frans Hendrik Botes,
-#  Copyright (c) 2022 v2.1 Enes Saltik,
+#  Copyright (c) 2024 v2.2 Enes Saltik,
 #  Credit to https://github.com/GerbenJavado/LinkFinder for the idea and regex
 #
 from burp import IBurpExtender, IScannerCheck, IScanIssue, ITab
@@ -54,7 +54,7 @@ class BurpExtender(IBurpExtender, IScannerCheck, ITab):
         
         print ("Burp JS LinkFinder V2 loaded.")
         print ("Copyright (c) 2019 Frans Hendrik Botes")
-        print ("Copyright (c) 2022 V2.1 (Current) Enes Saltik")
+        print ("Copyright (c) 2024 V2.2 (Current) Enes Saltik")
         
     def initUI(self):
         self.tab = swing.JPanel()
@@ -142,7 +142,7 @@ class BurpExtender(IBurpExtender, IScannerCheck, ITab):
 
         txt=""
         for i in range(self.outputList.getModel().getRowCount()):
-            txt+=str(self.outputList.getModel().getValueAt(i,0))+"\t"+self.outputList.getModel().getValueAt(i,1)+"\n"
+            txt+=str(self.outputList.getModel().getValueAt(i,0))+"\t"+self.outputList.getModel().getValueAt(i,1)+"\t"+self.outputList.getModel().getValueAt(i,2)+"\n"
         ret = chooseFile.showSaveDialog(self.tab)
         if ret == JFileChooser.APPROVE_OPTION:
             if chooseFile.getSelectedFile().isDirectory():
@@ -194,40 +194,46 @@ class linkAnalyse():
         self.reqres = reqres
         
 
-    regex_str = """
-    
-      (?:"|')                               # Start newline delimiter
-    
-      (
-        ((?:[a-zA-Z]{1,10}://|//)           # Match a scheme [a-Z]*1-10 or //
-        [^"'/]{1,}\.                        # Match a domainname (any character + dot)
-        [a-zA-Z]{2,}[^"']{0,})              # The domainextension and/or path
-    
-        |
-    
-        ((?:/|\.\./|\./)                    # Start with /,../,./
-        [^"'><,;| *()(%%$^/\\\[\]]          # Next character can't be...
-        [^"'><,;|()]{1,})                   # Rest of the characters can't be
-    
-        |
-    
-        ([a-zA-Z0-9_\-/]{1,}/               # Relative endpoint with /
-        [a-zA-Z0-9_\-/]{1,}                 # Resource name
-        \.(?:[a-zA-Z]{1,4}|action)          # Rest + extension (length 1-4 or action)
-        (?:[\?|/][^"|']{0,}|))              # ? mark with parameters
-    
-        |
-    
-        ([a-zA-Z0-9_\-]{1,}                 # filename
-        \.(?:php|asp|aspx|jsp|json|
-             action|html|js|txt|xml)             # . + extension
-        (?:\?[^"|']{0,}|))                  # ? mark with parameters
-    
-      )
-    
-      (?:"|')                               # End newline delimiter
-    
-    """     
+    regex_str = r"""
+
+  (?:"|')                               # Start newline delimiter
+
+  (
+    ((?:[a-zA-Z]{1,10}://|//)           # Match a scheme [a-Z]*1-10 or //
+    [^"'/]{1,}\.                        # Match a domainname (any character + dot)
+    [a-zA-Z]{2,}[^"']{0,})              # The domainextension and/or path
+
+    |
+
+    ((?:/|\.\./|\./)                    # Start with /,../,./
+    [^"'><,;| *()(%%$^/\\\[\]]          # Next character can't be...
+    [^"'><,;|()]{1,})                   # Rest of the characters can't be
+
+    |
+
+    ([a-zA-Z0-9_\-/]{1,}/               # Relative endpoint with /
+    [a-zA-Z0-9_\-/.]{1,}                # Resource name
+    \.(?:[a-zA-Z]{1,4}|action)          # Rest + extension (length 1-4 or action)
+    (?:[\?|#][^"|']{0,}|))              # ? or # mark with parameters
+
+    |
+
+    ([a-zA-Z0-9_\-/]{1,}/               # REST API (no extension) with /
+    [a-zA-Z0-9_\-/]{3,}                 # Proper REST endpoints usually have 3+ chars
+    (?:[\?|#][^"|']{0,}|))              # ? or # mark with parameters
+
+    |
+
+    ([a-zA-Z0-9_\-]{1,}                 # filename
+    \.(?:php|asp|aspx|jsp|json|
+         action|html|js|txt|xml)        # . + extension
+    (?:[\?|#][^"|']{0,}|))              # ? or # mark with parameters
+
+  )
+
+  (?:"|')                               # End newline delimiter
+
+"""  
 
     def	parser_file(self, content, regex_str, mode=1, more_regex=None, no_dup=1):
         regex = re.compile(regex_str, re.VERBOSE)
