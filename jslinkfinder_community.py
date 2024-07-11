@@ -2,7 +2,7 @@
 #  BurpLinkFinder Community - Find links within JS files.
 #
 #  Copyright (c) 2019 Frans Hendrik Botes,
-#  Copyright (c) 2024 v2.2 Enes Saltik,
+#  Copyright (c) 2024 v2.3 Enes Saltik,
 #  Credit to https://github.com/GerbenJavado/LinkFinder for the idea and regex
 #
 from burp import IBurpExtender, IScannerCheck, IScanIssue, ITab,IContextMenuFactory, IHttpRequestResponse
@@ -46,7 +46,7 @@ class BurpExtender(IBurpExtender, IScannerCheck, ITab,IContextMenuFactory, IHttp
         
         print ("Burp JS LinkFinder V2 loaded.")
         print ("Copyright (c) 2019 Frans Hendrik Botes")
-        print ("Copyright (c) 2024 V2.2 (Current) Enes Saltik")
+        print ("Copyright (c) 2024 V2.3 (Current) Enes Saltik")
         
     def initUI(self):
         self.tab = swing.JPanel()
@@ -56,7 +56,7 @@ class BurpExtender(IBurpExtender, IScannerCheck, ITab,IContextMenuFactory, IHttp
         self.outputLabel.setFont(Font("Tahoma", Font.BOLD, 14))
         self.outputLabel.setForeground(Color(142, 68, 173))
         self.tableData = []
-        colNames = ('ID','URL','Path')
+        colNames = ('ID','URL','Referer','Found Path')
         self.dataModel = DefaultTableModel(self.tableData, colNames)
         self.outputList = swing.JTable(self.dataModel)
         self.outputList.setAutoCreateRowSorter(True)
@@ -129,12 +129,12 @@ class BurpExtender(IBurpExtender, IScannerCheck, ITab,IContextMenuFactory, IHttp
 
         txt=""
         for i in range(self.outputList.getModel().getRowCount()):
-            txt+=str(self.outputList.getModel().getValueAt(i,0))+"\t"+self.outputList.getModel().getValueAt(i,1)+"\t"+self.outputList.getModel().getValueAt(i,2)+"\n"
+            txt+=str(self.outputList.getModel().getValueAt(i,0))+"\t"+self.outputList.getModel().getValueAt(i,1)+"\t"+self.outputList.getModel().getValueAt(i,2)+"\t"+self.outputList.getModel().getValueAt(i,3)+"\n"
         ret = chooseFile.showSaveDialog(self.tab)
         if ret == JFileChooser.APPROVE_OPTION:
             if chooseFile.getSelectedFile().isDirectory():
                 file_name = str(chooseFile.getSelectedFile())
-                f=open(file_name+"/export.txt","w")
+                f=open(file_name+"/export.txt","wb")
                 f.write(txt)
                 f.close()
             
@@ -157,7 +157,16 @@ class BurpExtender(IBurpExtender, IScannerCheck, ITab,IContextMenuFactory, IHttp
                             if "." in issueText['link']:
                                 if issueText['link'].split("?")[0].split(".")[-1] in self.blacklist_ext:
                                     continue
-                            self.outputList.getModel().addRow([self.outputList.getModel().getRowCount(),str(urlReq),issueText['link']])
+
+                            headers = self.helpers.analyzeRequest(ihrr.getHttpService(),ihrr.getRequest()).getHeaders()
+                            referer = "No Referer"
+                            for h in headers:
+                                if h.split(":")[0]=="Referer":
+                                    referer = h.split("Referer:")[1].strip()
+                                    break
+
+                            self.outputList.getModel().addRow([self.outputList.getModel().getRowCount(),str(urlReq),referer,issueText['link']])
+                            
             except UnicodeEncodeError:
                 print ("Error in URL decode.")
         print("Scan ended.")
