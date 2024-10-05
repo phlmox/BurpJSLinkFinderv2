@@ -74,9 +74,9 @@ class BurpExtender(IBurpExtender, IScannerCheck, ITab):
 
         self.clearBtn = swing.JButton("Clear Log", actionPerformed=self.clearLog)
         self.DeleteSelectedBtn = swing.JButton("Delete Selected Items", actionPerformed=self.deleteSelected)
-        self.exportBtn = swing.JButton("Save Endpoints", actionPerformed=self.saveBtn)
+        self.exportBtn = swing.JButton("Export Endpoints", actionPerformed=self.saveBtn)
 
-        self.onlyScopeCheckbox = swing.JCheckBox("Only Scope",actionPerformed=self.checkBoxScope)
+        self.onlyScopeCheckbox = swing.JCheckBox("Only In-Scope Items",actionPerformed=self.checkBoxScope)
 
         # Layout
         layout = swing.GroupLayout(self.tab)
@@ -90,34 +90,30 @@ class BurpExtender(IBurpExtender, IScannerCheck, ITab):
                 .addGroup(layout.createParallelGroup()
                     .addComponent(self.outputLabel)
                     .addComponent(self.scrollPane)
-                    .addComponent(self.clearBtn)
-                    .addComponent(self.DeleteSelectedBtn)
-                    .addComponent(self.exportBtn)
-                    .addComponent(self.onlyScopeCheckbox)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(self.clearBtn)
+                        .addComponent(self.DeleteSelectedBtn)
+                        .addComponent(self.exportBtn)
+                        .addComponent(self.onlyScopeCheckbox)
+                    )
                 )
             )
         )
-        
+    
         layout.setVerticalGroup(
-            layout.createParallelGroup()
+            layout.createSequentialGroup()
+            .addComponent(self.outputLabel)
+            .addComponent(self.scrollPane)
             .addGroup(layout.createParallelGroup()
-                .addGroup(layout.createSequentialGroup()
-                    .addComponent(self.outputLabel)
-                    .addComponent(self.scrollPane)
-                    .addComponent(self.clearBtn)
-                    .addComponent(self.DeleteSelectedBtn)
-                    .addComponent(self.exportBtn)
-                    .addComponent(self.onlyScopeCheckbox)
-                )
+                .addComponent(self.clearBtn)
+                .addComponent(self.DeleteSelectedBtn)
+                .addComponent(self.exportBtn)
+                .addComponent(self.onlyScopeCheckbox)
             )
         )
 
     def checkBoxScope(self,_x):
-        if self.onlyScope:
-            self.onlyScope =False
-        else:
-            self.onlyScope =True
-
+        self.onlyScope=not self.onlyScope
 
     def getTabCaption(self):
         return "BurpJSLinkFinder"
@@ -150,10 +146,8 @@ class BurpExtender(IBurpExtender, IScannerCheck, ITab):
                 f=open(file_name+"/export.txt","wb")
                 f.write(txt)
                 f.close()
-            
-
-    def doPassiveScan(self, ihrr):
-        
+    
+    def scanJS(self,ihrr):
         try:
             urlReq = ihrr.getUrl()
             testString = str(urlReq)
@@ -184,9 +178,16 @@ class BurpExtender(IBurpExtender, IScannerCheck, ITab):
                     issues.add(SRI(ihrr, self.helpers))
                     return issues
         except UnicodeEncodeError:
-            print ("Error in URL decode.")
+            print ("Error in URL decode.", urlReq)
+        except:
+            pass
         return None
 
+    def doActiveScan(self, brr, _):
+        return self.scanJS(brr)
+
+    def doPassiveScan(self, ihrr):
+        return self.scanJS(ihrr)
 
     def consolidateDuplicateIssues(self, isb, isa):
         return -1
