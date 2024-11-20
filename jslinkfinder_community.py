@@ -66,7 +66,7 @@ class BurpExtender(IBurpExtender, IScannerCheck, ITab,IContextMenuFactory, IHttp
 
         self.clearBtn = swing.JButton("Clear Log", actionPerformed=self.clearLog)
         self.DeleteSelectedBtn = swing.JButton("Delete Selected Items", actionPerformed=self.deleteSelected)
-        self.exportBtn = swing.JButton("Save Endpoints", actionPerformed=self.saveBtn)
+        self.exportBtn = swing.JButton("Export Endpoints", actionPerformed=self.saveBtn)
 
         # Layout
         layout = swing.GroupLayout(self.tab)
@@ -80,23 +80,23 @@ class BurpExtender(IBurpExtender, IScannerCheck, ITab,IContextMenuFactory, IHttp
                 .addGroup(layout.createParallelGroup()
                     .addComponent(self.outputLabel)
                     .addComponent(self.scrollPane)
-                    .addComponent(self.clearBtn)
-                    .addComponent(self.DeleteSelectedBtn)
-                    .addComponent(self.exportBtn)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(self.clearBtn)
+                        .addComponent(self.DeleteSelectedBtn)
+                        .addComponent(self.exportBtn)
+                    )
                 )
             )
         )
-        
+    
         layout.setVerticalGroup(
-            layout.createParallelGroup()
+            layout.createSequentialGroup()
+            .addComponent(self.outputLabel)
+            .addComponent(self.scrollPane)
             .addGroup(layout.createParallelGroup()
-                .addGroup(layout.createSequentialGroup()
-                    .addComponent(self.outputLabel)
-                    .addComponent(self.scrollPane)
-                    .addComponent(self.clearBtn)
-                    .addComponent(self.DeleteSelectedBtn)
-                    .addComponent(self.exportBtn)
-                )
+                .addComponent(self.clearBtn)
+                .addComponent(self.DeleteSelectedBtn)
+                .addComponent(self.exportBtn)
             )
         )
 
@@ -226,7 +226,7 @@ class linkAnalyse():
 
   (?:"|')                               # End newline delimiter
 
-"""
+""" 
 
     def	parser_file(self, content, regex_str, mode=1, more_regex=None, no_dup=1):
         regex = re.compile(regex_str, re.VERBOSE)
